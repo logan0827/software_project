@@ -28,7 +28,11 @@ function App() {
   useEffect(() => {
     fetchUsers();
     fetchPhotos();
-    if (user) fetchMessages();
+    if (user) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 10000);
+      return () => clearInterval(interval);
+    }
   }, [user]);
 
   const fetchUsers = () => {
@@ -106,7 +110,10 @@ function App() {
     const content = prompt(`Send DM to ${receiver}:`);
     if (!content) return;
     axios.post(`${API_URL}/messages`, { sender: user, receiver, content })
-      .then(() => alert('Message sent!'));
+      .then(() => {
+        alert('Message sent!');
+        fetchMessages();
+      });
   };
 
   const handleDeleteMessage = (msgId) => {
@@ -126,8 +133,20 @@ function App() {
         <h2>📷 Personal Photo Gallery</h2>
         <div>
           {user ? (
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <strong>Welcome, {user}! </strong>
+              {messages.length > 0 && (
+                <span style={{
+                  background: '#e74c3c',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  padding: '2px 8px',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}>
+                  📬 {messages.length}
+                </span>
+              )}
               <button onClick={handleSignOut} className="button-delete">Sign Out</button>
             </div>
           ) : (
@@ -169,7 +188,7 @@ function App() {
 
             {/* [요구사항 6-C] 받은 메시지 확인 / 답장 / 삭제 함 */}
             <div className="message-list" style={{ marginBottom: '20px' }}>
-              <h3>My Direct Messages</h3>
+              <h3>My Direct Messages {messages.length > 0 && <span style={{ color: '#e74c3c' }}>({messages.length})</span>}</h3>
               {messages.length === 0 ? <p>No messages received.</p> : messages.map(msg => (
                 <div key={msg.id} className="message-item">
                   <p><strong>From: {msg.sender}</strong> - {msg.content}</p>
